@@ -1,6 +1,9 @@
 # Test and downloaded files - DO NOT COMMIT
-DOWNLOADED_SOURCE_FILES/
-GENERATED_SOURCE_CODE_STRUCTURE/
+# Keep the folders but ignore their contents
+DOWNLOADED_SOURCE_FILES/*
+!DOWNLOADED_SOURCE_FILES/.gitkeep
+GENERATED_SOURCE_CODE_STRUCTURE/*
+!GENERATED_SOURCE_CODE_STRUCTURE/.gitkeep
 TEST_RESULTS.md
 
 # Node modules (if you add npm dependencies)
