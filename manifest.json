@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Vibe PowerApps Source Code Downloader",
+  "version": "1.0",
+  "description": "Download files and folder structure from vibe.powerapps.com",
+  "permissions": ["downloads", "activeTab", "scripting", "contextMenus"],
+  "host_permissions": ["https://vibe.powerapps.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Download source code from Vibe PowerApps",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
