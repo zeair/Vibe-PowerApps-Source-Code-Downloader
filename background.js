@@ -70,6 +70,16 @@ async function downloadFile(tab) {
         url: dataUrl,
         filename: response.filename,
         saveAs: false
+      }, (downloadId) => {
+        // After successful download, mark file as downloaded in the tree panel
+        if (downloadId) {
+          chrome.tabs.sendMessage(tab.id, {
+            action: 'markDownloaded',
+            filename: response.filename
+          }).catch(err => {
+            console.log('Could not mark file as downloaded:', err);
+          });
+        }
       });
     }
   } catch (error) {

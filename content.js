@@ -126,6 +126,66 @@ function getPlanId() {
   return match ? match[1] : 'unknown';
 }
 
+// Mark file as downloaded in the tree panel
+function markFileAsDownloaded(filename) {
+  // Find the tree item that contains this filename
+  const treeItems = Array.from(document.querySelectorAll('.fui-TreeItem'));
+
+  for (const item of treeItems) {
+    const nameElement = item.querySelector('.fui-TreeItemLayout__main') || item;
+    const itemText = nameElement.textContent.trim();
+
+    // Check if this tree item matches the downloaded filename
+    if (itemText === filename) {
+      // Add visual indicators
+      // 1. Add a green checkmark before the filename
+      if (!nameElement.querySelector('.downloaded-marker')) {
+        const marker = document.createElement('span');
+        marker.className = 'downloaded-marker';
+        marker.textContent = '✓ ';
+        marker.style.color = '#28a745';
+        marker.style.fontWeight = 'bold';
+        marker.style.marginRight = '4px';
+        nameElement.insertBefore(marker, nameElement.firstChild);
+      }
+
+      // 2. Change text color to green
+      nameElement.style.color = '#28a745';
+
+      // 3. Add a subtle opacity change
+      item.style.opacity = '0.7';
+
+      // Store in localStorage for persistence across page reloads
+      const storageKey = 'vibeDownloadedFiles_' + getPlanId();
+      const downloaded = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      if (!downloaded.includes(filename)) {
+        downloaded.push(filename);
+        localStorage.setItem(storageKey, JSON.stringify(downloaded));
+      }
+
+      console.log('Marked as downloaded:', filename);
+      break;
+    }
+  }
+}
+
+// Restore download markers on page load
+function restoreDownloadMarkers() {
+  const storageKey = 'vibeDownloadedFiles_' + getPlanId();
+  const downloaded = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
+  downloaded.forEach(filename => {
+    markFileAsDownloaded(filename);
+  });
+
+  if (downloaded.length > 0) {
+    console.log('Restored', downloaded.length, 'download markers');
+  }
+}
+
+// Run on page load
+restoreDownloadMarkers();
+
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((msg, _sender, respond) => {
   if (msg.action === 'getSource') {
@@ -139,6 +199,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, respond) => {
     const structure = getFolderStructure();
     const planId = getPlanId();
     respond({ structure, planId });
+    return true;
+  }
+
+  if (msg.action === 'markDownloaded') {
+    markFileAsDownloaded(msg.filename);
+    respond({ success: true });
     return true;
   }
 });
