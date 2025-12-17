@@ -4,6 +4,10 @@ Chrome extension for downloading source code files and folder structures from vi
 
 <img width="372" height="123" alt="image" src="https://github.com/user-attachments/assets/5271a26a-740c-4519-b4ff-9be365865267" />
 
+<img width="594" height="757" alt="image" src="https://github.com/user-attachments/assets/010da8f5-b506-40c9-865e-f000ca22b048" />
+
+
+
 
 ## Disclaimer
 
