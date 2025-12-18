@@ -396,17 +396,6 @@ function markFileAsDownloaded(filename) {
       // 3. Reduce opacity
       item.style.opacity = '0.5';
 
-      // 4. Add checkmark prefix if not already present
-      if (!nameElement.querySelector('.downloaded-marker')) {
-        const marker = document.createElement('span');
-        marker.className = 'downloaded-marker';
-        marker.textContent = '✓ ';
-        marker.style.color = '#28a745';
-        marker.style.fontWeight = 'bold';
-        marker.style.marginRight = '4px';
-        nameElement.insertBefore(marker, nameElement.firstChild);
-      }
-
       // Store in localStorage for persistence across page reloads
       const storageKey = 'vibeDownloadedFiles_' + getPlanId();
       const downloaded = JSON.parse(localStorage.getItem(storageKey) || '[]');
