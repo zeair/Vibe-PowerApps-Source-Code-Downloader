@@ -9,6 +9,17 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
+// Handle keyboard shortcuts
+chrome.commands.onCommand.addListener(async (command) => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  if (command === 'download-file') {
+    await downloadFile(tab);
+  } else if (command === 'download-tree') {
+    await downloadTree(tab);
+  }
+});
+
 // Right-click menu handler
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === 'downloadTree') {

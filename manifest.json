@@ -16,6 +16,22 @@
       "128": "icon128.png"
     }
   },
+  "commands": {
+    "download-file": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+D",
+        "mac": "Command+Shift+D"
+      },
+      "description": "Download current file"
+    },
+    "download-tree": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+T",
+        "mac": "Command+Shift+T"
+      },
+      "description": "Download folder structure"
+    }
+  },
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",
