@@ -58,19 +58,29 @@ function getMimeType(filename) {
 // Download current file
 async function downloadFile(tab) {
   try {
+    console.log('[Vibe Extension BG] Starting download process...');
     await injectScript(tab.id);
 
+    console.log('[Vibe Extension BG] Sending getSource message...');
     const response = await chrome.tabs.sendMessage(tab.id, { action: 'getSource' });
+
+    console.log('[Vibe Extension BG] Received response:', {
+      hasContent: !!response?.content,
+      contentLength: response?.content?.length || 0,
+      filename: response?.filename
+    });
 
     if (response?.content) {
       const mimeType = getMimeType(response.filename);
       const dataUrl = `data:${mimeType};charset=utf-8,` + encodeURIComponent(response.content);
 
+      console.log('[Vibe Extension BG] Triggering download for:', response.filename);
       chrome.downloads.download({
         url: dataUrl,
         filename: response.filename,
         saveAs: false
       }, (downloadId) => {
+        console.log('[Vibe Extension BG] Download started with ID:', downloadId);
         // After successful download, mark file as downloaded in the tree panel
         if (downloadId) {
           chrome.tabs.sendMessage(tab.id, {
@@ -81,9 +91,11 @@ async function downloadFile(tab) {
           });
         }
       });
+    } else {
+      console.error('[Vibe Extension BG] No content received from content script');
     }
   } catch (error) {
-    console.error('Error downloading file:', error);
+    console.error('[Vibe Extension BG] Error downloading file:', error);
   }
 }
 

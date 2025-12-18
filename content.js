@@ -1,12 +1,229 @@
 // content.js - Extract code and folder structure from vibe.powerapps.com
 
+// Extract code from Monaco Editor by scrolling through it
+async function extractCodeByScrolling() {
+  try {
+    console.log('[Vibe Extension] Starting scroll-based extraction...');
+
+    const scrollContainer = document.querySelector('.monaco-scrollable-element');
+    const viewLines = document.querySelector('.view-lines');
+
+    if (!scrollContainer || !viewLines) {
+      console.error('[Vibe Extension] Could not find Monaco scrollable container or view-lines');
+      return null;
+    }
+
+    // Store lines by their top position to avoid duplicates
+    const lines = new Map();
+    const lineHeight = 18;
+    const viewportHeight = scrollContainer.clientHeight;
+
+    console.log('[Vibe Extension] Starting scrape... this will take a few seconds.');
+    console.log('[Vibe Extension] Viewport height:', viewportHeight);
+
+    // Save original scroll position
+    const originalScrollTop = scrollContainer.scrollTop;
+
+    try {
+      // Scroll to the top first
+      scrollContainer.scrollTop = 0;
+      await new Promise(r => setTimeout(r, 500));
+
+      let previousLineCount = 0;
+      let noNewLinesCount = 0;
+      let iteration = 0;
+      const maxIterations = 1000; // Safety limit
+
+      // Keep scrolling until we stop finding new lines
+      while (iteration < maxIterations) {
+        // Collect lines currently in the DOM
+        try {
+          const viewLineElements = document.querySelectorAll('.view-line');
+          for (let j = 0; j < viewLineElements.length; j++) {
+            const line = viewLineElements[j];
+            try {
+              const top = parseFloat(line.style.top);
+              if (!isNaN(top)) {
+                const text = line.innerText !== undefined ? line.innerText : (line.textContent || '');
+                lines.set(top, text);
+              }
+            } catch (lineError) {
+              // Skip this line if there's an error
+            }
+          }
+        } catch (e) {
+          console.error('[Vibe Extension] Error collecting lines:', e);
+        }
+
+        // Check if we got new lines
+        if (lines.size === previousLineCount) {
+          noNewLinesCount++;
+          // If we haven't found new lines in 3 consecutive iterations, we're done
+          if (noNewLinesCount >= 3) {
+            console.log('[Vibe Extension] No new lines found, stopping');
+            break;
+          }
+        } else {
+          noNewLinesCount = 0;
+          previousLineCount = lines.size;
+        }
+
+        // Progress log every 10 iterations
+        if (iteration % 10 === 0) {
+          console.log(`[Vibe Extension] Iteration ${iteration}, captured ${lines.size} unique lines...`);
+        }
+
+        // Scroll down by viewport height minus one line to ensure overlap
+        scrollContainer.scrollTop += viewportHeight - lineHeight;
+
+        // Wait for Monaco to render
+        await new Promise(r => setTimeout(r, 100));
+
+        iteration++;
+      }
+
+      if (iteration >= maxIterations) {
+        console.warn('[Vibe Extension] Reached maximum iterations');
+      }
+
+    } finally {
+      // Always restore original scroll position
+      scrollContainer.scrollTop = originalScrollTop;
+    }
+
+    // Sort lines by their top position and join
+    const fullCode = Array.from(lines.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(entry => entry[1])
+      .join('\n');
+
+    console.log(`[Vibe Extension] Done! Captured ${lines.size} lines, ${fullCode.length} chars`);
+    console.log('[Vibe Extension] Full code extraction complete');
+
+    return fullCode;
+  } catch (error) {
+    console.error('[Vibe Extension] Fatal error in extractCodeByScrolling:', error);
+    return null;
+  }
+}
+
 // Extract code from Monaco Editor
-function extractCode() {
+async function extractCode() {
+  console.log('[Vibe Extension] Starting code extraction...');
+
+  // Try to get the Monaco editor instance from the global monaco object
+  if (window.monaco && window.monaco.editor) {
+    console.log('[Vibe Extension] Found window.monaco.editor');
+    const editors = window.monaco.editor.getModels();
+    if (editors && editors.length > 0) {
+      const content = editors[0].getValue();
+      console.log('[Vibe Extension] Got content from monaco.editor.getModels():', content.length, 'chars');
+      return content;
+    }
+  }
+
+  // Fallback: Try to find editor instance in the DOM
+  const monacoElement = document.querySelector('.monaco-editor');
+  if (!monacoElement) {
+    console.error('[Vibe Extension] No .monaco-editor element found');
+    return null;
+  }
+
+  console.log('[Vibe Extension] Found monaco-editor element');
+
+  // Method 1: Look for Monaco's internal property (e.g., __monaco_editor_*)
+  const editorKey = Object.keys(monacoElement).find(k => k.startsWith('__monaco_editor_'));
+  if (editorKey) {
+    console.log('[Vibe Extension] Found editor key:', editorKey);
+    const editorInstance = monacoElement[editorKey];
+    if (editorInstance.getValue) {
+      const content = editorInstance.getValue();
+      console.log('[Vibe Extension] Got content via', editorKey, ':', content.length, 'chars');
+      return content;
+    }
+    if (editorInstance.getModel && editorInstance.getModel().getValue) {
+      const content = editorInstance.getModel().getValue();
+      console.log('[Vibe Extension] Got content via', editorKey, '.getModel():', content.length, 'chars');
+      return content;
+    }
+  }
+
+  // Method 2: Try common property names
+  const editorInstance = monacoElement.__editor ||
+                        monacoElement.editorInstance ||
+                        monacoElement._editorInstance;
+
+  if (editorInstance) {
+    console.log('[Vibe Extension] Found editorInstance via common properties');
+    if (editorInstance.getValue) {
+      const content = editorInstance.getValue();
+      console.log('[Vibe Extension] Got content via common property:', content.length, 'chars');
+      return content;
+    }
+
+    if (editorInstance.getModel) {
+      const model = editorInstance.getModel();
+      if (model && model.getValue) {
+        const content = model.getValue();
+        console.log('[Vibe Extension] Got content via common property getModel():', content.length, 'chars');
+        return content;
+      }
+    }
+  }
+
+  // Method 3: Search through all properties for anything that looks like an editor
+  console.log('[Vibe Extension] Searching through all element properties...');
+  for (const key of Object.keys(monacoElement)) {
+    const obj = monacoElement[key];
+    if (obj && typeof obj === 'object') {
+      // Check if it has getValue method
+      if (typeof obj.getValue === 'function') {
+        try {
+          const content = obj.getValue();
+          if (typeof content === 'string' && content.length > 0) {
+            console.log('[Vibe Extension] Got content via property', key, ':', content.length, 'chars');
+            return content;
+          }
+        } catch (e) {
+          // Continue searching
+        }
+      }
+      // Check if it has getModel method
+      if (typeof obj.getModel === 'function') {
+        try {
+          const model = obj.getModel();
+          if (model && typeof model.getValue === 'function') {
+            const content = model.getValue();
+            if (typeof content === 'string' && content.length > 0) {
+              console.log('[Vibe Extension] Got content via property', key, '.getModel():', content.length, 'chars');
+              return content;
+            }
+          }
+        } catch (e) {
+          // Continue searching
+        }
+      }
+    }
+  }
+
+  // Method 4: Scroll-based extraction (most reliable fallback)
+  console.log('[Vibe Extension] API methods failed, trying scroll-based extraction...');
+  const scrollContent = await extractCodeByScrolling();
+  if (scrollContent && scrollContent.length > 0) {
+    return scrollContent;
+  }
+
+  // Last resort fallback: Try visible lines only (incomplete but better than nothing)
+  console.warn('[Vibe Extension] Falling back to visible lines only (incomplete)');
   const monacoLines = document.querySelector('.view-lines');
   if (monacoLines) {
     const lines = Array.from(monacoLines.querySelectorAll('.view-line'));
-    return lines.map(line => line.textContent).join('\n');
+    const content = lines.map(line => line.innerText || line.textContent || '').join('\n');
+    console.log('[Vibe Extension] Got content from visible lines:', content.length, 'chars,', lines.length, 'lines');
+    return content;
   }
+
+  console.error('[Vibe Extension] All extraction methods failed');
   return null;
 }
 
@@ -188,11 +405,25 @@ restoreDownloadMarkers();
 
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((msg, _sender, respond) => {
+  console.log('[Vibe Extension] Received message:', msg.action);
+
   if (msg.action === 'getSource') {
-    const content = extractCode();
-    const filename = extractFilename();
-    respond({ content, filename });
-    return true;
+    // Handle async extractCode
+    console.log('[Vibe Extension] Starting code extraction...');
+    extractCode()
+      .then(content => {
+        console.log('[Vibe Extension] Extraction complete, content length:', content?.length || 0);
+        const filename = extractFilename();
+        console.log('[Vibe Extension] Filename:', filename);
+        console.log('[Vibe Extension] Sending response to background script...');
+        respond({ content, filename });
+      })
+      .catch(error => {
+        console.error('[Vibe Extension] Error extracting code:', error);
+        const filename = extractFilename();
+        respond({ content: null, filename });
+      });
+    return true; // Keep the message channel open for async response
   }
 
   if (msg.action === 'getTree') {
