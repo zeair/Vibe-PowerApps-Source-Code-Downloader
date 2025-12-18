@@ -384,8 +384,11 @@ function markFileAsDownloaded(filename) {
     const nameElement = item.querySelector('.fui-TreeItemLayout__main') || item;
     const itemText = nameElement.textContent.trim();
 
-    // Check if this tree item matches the downloaded filename
-    if (itemText === filename) {
+    // Check if this tree item matches the downloaded filename exactly
+    // Only match files (items without aria-expanded attribute)
+    const isFolder = item.getAttribute('aria-expanded') !== null;
+
+    if (!isFolder && itemText === filename) {
       // Apply visual indicators without hiding
       // 1. Strikethrough text
       nameElement.style.textDecoration = 'line-through';
