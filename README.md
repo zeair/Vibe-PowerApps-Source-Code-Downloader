@@ -62,15 +62,22 @@ The extension comes with default keyboard shortcuts:
 
 ### Download Folder Structure
 
+**IMPORTANT: Before downloading the folder structure:**
+1. **Expand ALL folders** in the file tree sidebar on the left
+2. Make sure the entire project structure is visible (all folders opened)
+3. This ensures the JSON will contain the complete folder hierarchy
+
 **Method 1: Right-click extension icon**
 1. Navigate to vibe.powerapps.com with your project open
-2. Right-click the Vibe PowerApps extension icon in your Chrome toolbar
-3. Select "Download folder structure from Vibe PowerApps"
-4. A JSON file will download with format: `vibe.powerapps.[plan-id].json`
-5. The JSON contains the complete folder hierarchy
+2. **Expand all folders in the file tree** (click the arrow icons to open all nested folders)
+3. Right-click the Vibe PowerApps extension icon in your Chrome toolbar
+4. Select "Download folder structure from Vibe PowerApps"
+5. A JSON file will download with format: `vibe.powerapps.[plan-id].json`
+6. The JSON contains the complete folder hierarchy
 
 **Method 2: Use keyboard shortcut**
-- Press `Ctrl+Shift+T` (Windows/Linux) or `Cmd+Shift+T` (Mac) to download the folder structure
+1. **Expand all folders in the file tree** first
+2. Press `Ctrl+Shift+T` (Windows/Linux) or `Cmd+Shift+T` (Mac) to download the folder structure
 
 ## Example Folder Structure JSON
 
