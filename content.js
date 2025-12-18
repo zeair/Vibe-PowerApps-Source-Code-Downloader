@@ -375,7 +375,7 @@ function getPlanId() {
   return match ? match[1] : 'unknown';
 }
 
-// Mark file as downloaded in the tree panel by hiding it
+// Mark file as downloaded in the tree panel with green checkmark
 function markFileAsDownloaded(filename) {
   // Find the tree item that contains this filename
   const treeItems = Array.from(document.querySelectorAll('.fui-TreeItem'));
@@ -391,14 +391,31 @@ function markFileAsDownloaded(filename) {
       continue; // Skip folders
     }
 
-    // Get text content
+    // Get text content, removing the checkmark if it already exists
     let itemText = nameElement.textContent.trim();
+    // Remove checkmark prefix if present
+    itemText = itemText.replace(/^✓\s*/, '');
 
     if (itemText === filename) {
-      // Hide the downloaded file from the tree
-      item.style.display = 'none';
+      // Add visual indicators
+      // 1. Add a green checkmark before the filename
+      if (!nameElement.querySelector('.downloaded-marker')) {
+        const marker = document.createElement('span');
+        marker.className = 'downloaded-marker';
+        marker.textContent = '✓ ';
+        marker.style.color = '#28a745';
+        marker.style.fontWeight = 'bold';
+        marker.style.marginRight = '4px';
+        nameElement.insertBefore(marker, nameElement.firstChild);
+      }
 
-      console.log('Marked as downloaded (hidden):', filename);
+      // 2. Change text color to green
+      nameElement.style.color = '#28a745';
+
+      // 3. Add a subtle opacity change
+      item.style.opacity = '0.7';
+
+      console.log('Marked as downloaded:', filename);
       break;
     }
   }
