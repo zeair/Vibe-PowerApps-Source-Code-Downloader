@@ -343,7 +343,7 @@ function getPlanId() {
   return match ? match[1] : 'unknown';
 }
 
-// Mark file as downloaded in the tree panel
+// Mark file as downloaded in the tree panel by hiding it
 function markFileAsDownloaded(filename) {
   // Find the tree item that contains this filename
   const treeItems = Array.from(document.querySelectorAll('.fui-TreeItem'));
@@ -354,23 +354,8 @@ function markFileAsDownloaded(filename) {
 
     // Check if this tree item matches the downloaded filename
     if (itemText === filename) {
-      // Add visual indicators
-      // 1. Add a green checkmark before the filename
-      if (!nameElement.querySelector('.downloaded-marker')) {
-        const marker = document.createElement('span');
-        marker.className = 'downloaded-marker';
-        marker.textContent = '✓ ';
-        marker.style.color = '#28a745';
-        marker.style.fontWeight = 'bold';
-        marker.style.marginRight = '4px';
-        nameElement.insertBefore(marker, nameElement.firstChild);
-      }
-
-      // 2. Change text color to green
-      nameElement.style.color = '#28a745';
-
-      // 3. Add a subtle opacity change
-      item.style.opacity = '0.7';
+      // Hide the tree item completely
+      item.style.display = 'none';
 
       // Store in localStorage for persistence across page reloads
       const storageKey = 'vibeDownloadedFiles_' + getPlanId();
@@ -380,13 +365,13 @@ function markFileAsDownloaded(filename) {
         localStorage.setItem(storageKey, JSON.stringify(downloaded));
       }
 
-      console.log('Marked as downloaded:', filename);
+      console.log('Hidden downloaded file:', filename);
       break;
     }
   }
 }
 
-// Restore download markers on page load
+// Restore hidden files on page load
 function restoreDownloadMarkers() {
   const storageKey = 'vibeDownloadedFiles_' + getPlanId();
   const downloaded = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -396,7 +381,7 @@ function restoreDownloadMarkers() {
   });
 
   if (downloaded.length > 0) {
-    console.log('Restored', downloaded.length, 'download markers');
+    console.log('Hidden', downloaded.length, 'downloaded files');
   }
 }
 
