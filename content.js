@@ -107,7 +107,7 @@ async function extractCodeByScrolling() {
   }
 }
 
-// Extract code from Monaco Editor
+// Extract code from Monaco Editor or other code viewers
 async function extractCode() {
   console.log('[Vibe Extension] Starting code extraction...');
 
@@ -122,10 +122,42 @@ async function extractCode() {
     }
   }
 
-  // Fallback: Try to find editor instance in the DOM
+  // Check if Monaco editor exists
   const monacoElement = document.querySelector('.monaco-editor');
   if (!monacoElement) {
-    console.error('[Vibe Extension] No .monaco-editor element found');
+    console.log('[Vibe Extension] No .monaco-editor element found, trying alternative viewers...');
+
+    // Try to find content in a pre or code element (for markdown/json viewers)
+    const preElement = document.querySelector('pre');
+    if (preElement) {
+      const content = preElement.textContent || preElement.innerText || '';
+      if (content.length > 0) {
+        console.log('[Vibe Extension] Got content from <pre> element:', content.length, 'chars');
+        return content;
+      }
+    }
+
+    // Try to find any code block
+    const codeElement = document.querySelector('code');
+    if (codeElement) {
+      const content = codeElement.textContent || codeElement.innerText || '';
+      if (content.length > 0) {
+        console.log('[Vibe Extension] Got content from <code> element:', content.length, 'chars');
+        return content;
+      }
+    }
+
+    // Try to find content in a textarea (some simple editors use this)
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
+      const content = textarea.value || '';
+      if (content.length > 0) {
+        console.log('[Vibe Extension] Got content from <textarea>:', content.length, 'chars');
+        return content;
+      }
+    }
+
+    console.error('[Vibe Extension] No code viewer found');
     return null;
   }
 
