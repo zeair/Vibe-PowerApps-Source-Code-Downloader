@@ -71,7 +71,7 @@ def reconstruct_project(json_file, source_dir, target_dir):
 if __name__ == '__main__':
     # Usage
     reconstruct_project(
-        json_file='DOWNLOADED_SOURCE_FILES/vibe.powerapps.dec5a315-f8d9-f011-8544-00224803d831.json',
+        json_file='DOWNLOADED_SOURCE_FILES/vibe.powerapps.latest.json',
         source_dir='DOWNLOADED_SOURCE_FILES',
         target_dir='GENERATED_SOURCE_CODE_STRUCTURE'
     )
