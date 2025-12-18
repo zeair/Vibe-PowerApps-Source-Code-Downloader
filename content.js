@@ -382,13 +382,21 @@ function markFileAsDownloaded(filename) {
 
   for (const item of treeItems) {
     const nameElement = item.querySelector('.fui-TreeItemLayout__main') || item;
-    const itemText = nameElement.textContent.trim();
 
     // Check if this tree item matches the downloaded filename
     // Only match files (items without aria-expanded attribute)
     const isFolder = item.getAttribute('aria-expanded') !== null;
 
-    if (!isFolder && itemText === filename) {
+    if (isFolder) {
+      continue; // Skip folders
+    }
+
+    // Get text content, removing the checkmark if it already exists
+    let itemText = nameElement.textContent.trim();
+    // Remove checkmark prefix if present
+    itemText = itemText.replace(/^✓\s*/, '');
+
+    if (itemText === filename) {
       // Add visual indicators
       // 1. Add a green checkmark before the filename
       if (!nameElement.querySelector('.downloaded-marker')) {
@@ -407,36 +415,11 @@ function markFileAsDownloaded(filename) {
       // 3. Add a subtle opacity change
       item.style.opacity = '0.7';
 
-      // Store in localStorage for persistence across page reloads
-      const storageKey = 'vibeDownloadedFiles_' + getPlanId();
-      const downloaded = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      if (!downloaded.includes(filename)) {
-        downloaded.push(filename);
-        localStorage.setItem(storageKey, JSON.stringify(downloaded));
-      }
-
       console.log('Marked as downloaded:', filename);
       break;
     }
   }
 }
-
-// Restore download markers on page load
-function restoreDownloadMarkers() {
-  const storageKey = 'vibeDownloadedFiles_' + getPlanId();
-  const downloaded = JSON.parse(localStorage.getItem(storageKey) || '[]');
-
-  downloaded.forEach(filename => {
-    markFileAsDownloaded(filename);
-  });
-
-  if (downloaded.length > 0) {
-    console.log('Restored', downloaded.length, 'downloaded file markers');
-  }
-}
-
-// Run on page load
-restoreDownloadMarkers();
 
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((msg, _sender, respond) => {
